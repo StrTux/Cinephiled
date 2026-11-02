@@ -1,6 +1,9 @@
+import { QueryClient, dehydrate } from "@tanstack/react-query";
+import { getServerSession } from "next-auth";
 import { Fragment } from "react";
 
-import { getTechnicalDetails } from "apiRoutes/media";
+import { authOptions } from "api/auth/[...nextauth]";
+import { fetchMediaAccountStates, mediaAccountStatesQueryKey } from "apiRoutes/user";
 import MovieDetails from "components/pages/Movie/MovieDetails";
 import MovieTab from "components/pages/Movie/MovieTab";
 import DominantColor from "components/Shared/DominantColor/DominantColor";
@@ -58,6 +61,7 @@ const Movie = ({
         <div className='relative z-10'>
           {/* movie tabs */}
           <MovieTab
+            mediaId={id}
             cast={cast}
             reviews={reviews}
             backdrops={backdrops}
@@ -85,14 +89,32 @@ const Movie = ({
 
 export const getServerSideProps = async (ctx) => {
   try {
-    const [movieResponse, languagesResponse] = await Promise.all([
+    const [movieResponse, languagesResponse, session] = await Promise.all([
       fetch(apiEndpoints.movie.movieDetails(ctx.query.id), fetchOptions()),
-      fetch(apiEndpoints.language, fetchOptions())
+      fetch(apiEndpoints.language, fetchOptions()),
+      getServerSession(ctx.req, ctx.res, authOptions)
     ]);
 
     if (!movieResponse.ok) throw new Error("error fetching details");
 
     const [movieDetails, languages] = await Promise.all([movieResponse.json(), languagesResponse.json()]);
+
+    const queryClient = new QueryClient();
+    const mediaId = movieDetails?.id ?? ctx.query.id;
+    const token = session?.user?.accessToken;
+    const accountId = session?.user?.accountId;
+
+    if (token && accountId && mediaId != null) {
+      try {
+        await queryClient.prefetchQuery({
+          queryKey: mediaAccountStatesQueryKey("movie", mediaId, accountId),
+          queryFn: ({ signal }) =>
+            fetchMediaAccountStates({ mediaType: "movie", mediaId, token, signal })
+        });
+      } catch (prefetchErr) {
+        console.error("prefetch media account states (movie) failed", prefetchErr);
+      }
+    }
 
     const socialIds = movieDetails?.external_ids,
       language = languages.find((item) => matches(item.iso_639_1, movieDetails.original_language)),
@@ -104,7 +126,6 @@ export const getServerSideProps = async (ctx) => {
       ]);
 
     const isLogoDark = await isImageDark(logo?.file_path);
-    const technicalDetails = await getTechnicalDetails(socialIds?.imdb_id);
 
     return {
       props: {
@@ -119,7 +140,7 @@ export const getServerSideProps = async (ctx) => {
           totalCount: movieDetails?.credits?.cast?.length,
           data: movieDetails?.credits?.cast?.slice(0, 15)
         },
-        reviews: movieDetails?.reviews?.results || [],
+        reviews: movieDetails?.reviews || null,
         backdrops: movieDetails?.images?.backdrops || [],
         posters: movieDetails?.images?.posters || [],
         recommendations: movieDetails?.recommendations?.results || [],
@@ -147,11 +168,13 @@ export const getServerSideProps = async (ctx) => {
           budget: movieDetails?.budget,
           revenue: movieDetails?.revenue,
           language: language?.english_name || language?.name || "TBA",
-          technicalDetails,
+          imdbId: socialIds?.imdb_id,
           productionCompanies: movieDetails?.production_companies || [],
           networks: [],
           keywords: movieDetails?.keywords?.keywords || []
-        }
+        },
+
+        dehydratedState: dehydrate(queryClient)
       }
     };
   } catch (err) {

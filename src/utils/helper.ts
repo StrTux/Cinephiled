@@ -2,6 +2,7 @@ import clsx, { ClassValue } from "clsx";
 import { extendTailwindMerge } from "tailwind-merge";
 
 import { apiEndpoints, read_access_token } from "data/apiEndpoints";
+import { DICEBEAR_URL, TMDB_IMAGE_URL } from "data/global";
 import { theme } from "theme/theme";
 import { tailwindFontSizeTokens } from "tokens/typography";
 
@@ -117,12 +118,12 @@ export const getGender = (gender: number) => {
   }
 };
 
-export const removeDuplicates = (items: Array<{ id: string }>) => {
+export const removeDuplicates = (items: Array<{ id: string; media_type?: string }>) => {
   const uniqueItemsMap = new Map();
 
   items.forEach((item) => {
-    if (!uniqueItemsMap.has(item.id)) {
-      uniqueItemsMap.set(item.id, item);
+    if (!uniqueItemsMap.has(uniqueMediaKey(item))) {
+      uniqueItemsMap.set(uniqueMediaKey(item), item);
     }
   });
 
@@ -278,3 +279,12 @@ export const getMediaLogo = (logos: { vote_average: number }[]) => {
 
   return logos.sort((a, b) => b.vote_average - a.vote_average).at(0);
 };
+
+export const getUserAvatar = (avatar: { type: string; src: string }) => {
+  if (!avatar) return {};
+
+  return avatar.type === "tmdb" ? `${TMDB_IMAGE_URL}w100_and_h100_face${avatar.src}` : `${DICEBEAR_URL}/bottts/svg?seed=${avatar.src}`;
+};
+
+/** TMDB list rows: movie and TV can share the same numeric id — pair with `media_type` for uniqueness. */
+export const uniqueMediaKey = (item: { media_type?: string; id?: string | number }) => `${String(item.media_type || "")}:${String(item.id || "")}`;

@@ -2,7 +2,6 @@ import { Instagram, Link as LinkIcon, Twitter } from "lucide-react";
 import Link from "next/link";
 
 import ShareButton from "components/Shared/ShareButton";
-import TechnicalDetails from "components/Shared/TechnicalDetails";
 import FlexBox from "components/UI/FlexBox";
 import { Grid } from "components/UI/Grid";
 import H4 from "components/UI/Typography/H4";
@@ -12,10 +11,11 @@ import { formatCurrency, getNiceName, getReleaseDate, getRuntime, isEmptyObject,
 
 import CollectionCard from "../pages/Movie/CollectionCard";
 
+import ImdbLinks from "./ImdbLinks";
 import ProductionDetails from "./ProductionDetails";
 
 const Overview = ({ overviewData, className, mediaType }) => {
-  const { socialIds, homepage, status, language, title, description, technicalDetails, keywords } = overviewData;
+  const { socialIds, homepage, status, language, title, description, imdbId, keywords } = overviewData;
 
   const gridItems = matches(mediaType, "movie")
     ? [
@@ -64,10 +64,7 @@ const Overview = ({ overviewData, className, mediaType }) => {
             <ProductionDetails productionCompanies={overviewData?.productionCompanies} networks={overviewData?.networks} />
           </div>
 
-          <div>
-            <P weight='bold'>Technical Details</P>
-            <TechnicalDetails technicalDetails={technicalDetails} />
-          </div>
+          <ImdbLinks imdbId={imdbId} />
         </Grid>
 
         {keywords?.length > 0 ? (

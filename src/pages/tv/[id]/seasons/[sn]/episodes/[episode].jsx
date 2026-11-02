@@ -11,6 +11,7 @@ import RatingModal from "components/RatingModal/RatingModal";
 import CrewCredits from "components/Shared/CrewCredits";
 import DominantColor from "components/Shared/DominantColor/DominantColor";
 import { mediaDetailsWrapper } from "components/Shared/GlobalComponents";
+import ImdbLinks from "components/Shared/ImdbLinks";
 import MediaHeroBackground from "components/Shared/MediaHeroBackground/MediaHeroBackground";
 import MetaWrapper from "components/Shared/MetaWrapper";
 import ShareButton from "components/Shared/ShareButton";
@@ -20,6 +21,7 @@ import MediaImageTemplateGrid from "components/Templates/MediaImageTemplateGrid"
 import { CastCarousel } from "components/Templates/PeopleTemplate";
 import Button from "components/UI/Button";
 import FlexBox from "components/UI/FlexBox";
+import { Grid } from "components/UI/Grid";
 import LayoutContainer from "components/UI/LayoutContainer";
 import H2 from "components/UI/Typography/H2";
 import H3 from "components/UI/Typography/H3";
@@ -84,14 +86,15 @@ const EpisodeRatingButton = ({ savedRating, title, seriesId, seasonNumber, episo
         rating={savedRatingState}
         title={title}
         mediaType='episode'
-        setRatingFunc={setRatingHandler}
-        deleteRatingFunc={deleteRatingHandler}
+        onSubmitRating={setRatingHandler}
+        onDeleteRating={deleteRatingHandler}
       />
     </Fragment>
   );
 };
 
 const Episode = ({
+  imdbId,
   releaseDate,
   overview,
   cast,
@@ -158,7 +161,11 @@ const Episode = ({
                 </P>
               ) : null}
 
-              {crewData?.length > 0 ? <CrewCredits crewData={crewData} className='my-2032' /> : null}
+              <Grid className='my-2032 max-w-max gap-x-40' colConfig={{ xxs: 2 }}>
+                {crewData?.length > 0 ? <CrewCredits crewData={crewData} className='contents' /> : null}
+
+                <ImdbLinks imdbId={imdbId} />
+              </Grid>
 
               <FlexBox className='mt-2032 flex-wrap items-center gap-10'>
                 <EpisodeRatingButton
@@ -181,7 +188,7 @@ const Episode = ({
         <div className='relative z-10'>
           {/* cast */}
           {cast?.length > 0 ? (
-            <LayoutContainer className='py-3248 pe-0'>
+            <LayoutContainer className='py-3248'>
               <H3 className='mb-1620'>Cast</H3>
               <CastCarousel cast={cast} />
             </LayoutContainer>
@@ -248,6 +255,7 @@ export const getServerSideProps = async (ctx) => {
 
     return {
       props: {
+        imdbId: res?.external_ids?.imdb_id,
         releaseDate: res?.air_date,
         overview: res?.overview,
         cast: cast.concat(guest_stars) || [],

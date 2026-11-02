@@ -57,13 +57,13 @@ const FilterPanel = ({
         </Button>
       </FlexBox>
 
-      <div className={cn("overflow-y-auto", isMobile ? "max-h-[65vh]" : "max-h-[80vh]")}>
+      <div className={cn("overflow-y-auto", isMobile ? "max-h-[65vh]" : "max-h-[calc(100vh-300px)]")}>
         {/* Sort By */}
         <div className={cn("border-b border-neutral-700", isMobile ? "px-10 py-20" : "p-20")}>
           <P weight='medium' size='small' className='mb-12 text-neutral-300'>
             Sort By
           </P>
-          <Select defaultValue={filters.sortBy} onValueChange={(value) => onFilterChange("sortBy", value)}>
+          <Select value={filters.sortBy} onValueChange={(value) => onFilterChange("sortBy", value)}>
             <SelectTrigger>
               <SelectValue placeholder='Sort By' />
             </SelectTrigger>

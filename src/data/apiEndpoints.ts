@@ -54,7 +54,7 @@ export const apiEndpoints = {
     getRecommendations: ({ mediaType, accountId, pageQuery = 1 }: { mediaType: string; accountId: string; pageQuery?: number }) =>
       `${baseUrlV4}/account/${accountId}/${mediaType}/recommendations?page=${pageQuery}&language=en-US`,
 
-    getCountryCode: (ip: string) => `https://ipwho.is/${ip}?fields=country_code`
+    getCountryCode: (ip: string) => `https://api.ipwho.org/ip/${ip}?apiKey=${process.env.IP_WHO_API_KEY}&get=countryCode`
   },
   search: {
     movieSearch: ({ query, pageQuery = 1, year = "" }: { query: string; pageQuery?: number; sortBy?: string; year?: string }) =>
@@ -86,10 +86,14 @@ export const apiEndpoints = {
 
     getMovieCredits: ({ id }: { id: string }) => `${baseUrlV3}/movie/${id}?language=en-US&append_to_response=credits`,
 
+    movieReviews: ({ id, pageQuery = 1 }: { id: string; pageQuery?: number }) => `${baseUrlV3}/movie/${id}/reviews?language=en-US&page=${pageQuery}`,
+
     movieGenreList: `${baseUrlV3}/genre/movie/list?language=en-US`,
 
     nowPlaying: ({ region, pageQuery = 1 }: { region: string; pageQuery: number }) =>
-      `${baseUrlV3}/movie/now_playing?page=${pageQuery}&region=${region}`
+      `${baseUrlV3}/movie/now_playing?page=${pageQuery}&region=${region}`,
+
+    accountStates: (id: string) => `${baseUrlV3}/movie/${id}/account_states`
   },
   tv: {
     trendingTv: ({ pageQuery = 1 }) => `${baseUrlV3}/trending/tv/day?language=en-US&page=${pageQuery}`,
@@ -102,8 +106,11 @@ export const apiEndpoints = {
     tvSeasonDetails: ({ id, seasonNumber }: { id: string; seasonNumber: number }) =>
       `${baseUrlV3}/tv/${id}/season/${seasonNumber}?language=en-US&append_to_response=aggregate_credits,videos,images&include_image_language=${imageLanguages}`,
 
+    tvSeasonDetailsNoAppend: ({ id, seasonNumber }: { id: string; seasonNumber: number }) =>
+      `${baseUrlV3}/tv/${id}/season/${seasonNumber}?language=en-US`,
+
     episodeDetails: ({ id, seasonNumber, episodeNumber }: { id: string; seasonNumber: number; episodeNumber: number }) =>
-      `${baseUrlV3}/tv/${id}/season/${seasonNumber}/episode/${episodeNumber}?language=en-US&append_to_response=images,credits&include_image_language=${imageLanguages}`,
+      `${baseUrlV3}/tv/${id}/season/${seasonNumber}/episode/${episodeNumber}?language=en-US&append_to_response=images,credits,external_ids&include_image_language=${imageLanguages}`,
 
     episodeAccountStates: ({ seriesId, seasonNumber, episodeNumber }: { seriesId: string; seasonNumber: number; episodeNumber: number }) =>
       `${baseUrlV3}/tv/${seriesId}/season/${seasonNumber}/episode/${episodeNumber}/account_states`,
@@ -114,7 +121,11 @@ export const apiEndpoints = {
 
     getTvCredits: ({ id }: { id: string }) => `${baseUrlV3}/tv/${id}?language=en-US&append_to_response=aggregate_credits`,
 
-    tvGenreList: `${baseUrlV3}/genre/tv/list?language=en-US`
+    tvReviews: ({ id, pageQuery = 1 }: { id: string; pageQuery?: number }) => `${baseUrlV3}/tv/${id}/reviews?language=en-US&page=${pageQuery}`,
+
+    tvGenreList: `${baseUrlV3}/genre/tv/list?language=en-US`,
+
+    accountStates: (id: string) => `${baseUrlV3}/tv/${id}/account_states`
   },
   discover: {
     movies: ({
@@ -221,8 +232,8 @@ export const apiEndpoints = {
 
     listItems: ({ id }: { id: string }) => `${baseUrlV4}/list/${id}/items`,
 
-    listItemStatus: ({ id, mediaId, mediaType }: { id: string; mediaId: string; mediaType: string }) =>
-      `${baseUrlV4}/list/${id}/item_status?media_id=${mediaId}&media_type=${mediaType}`
+    listItemStatus: ({ listId, mediaId, mediaType }: { listId: string; mediaId: string; mediaType: string }) =>
+      `${baseUrlV4}/list/${listId}/item_status?media_id=${mediaId}&media_type=${mediaType}`
   },
   collection: {
     collectionDetails: (id: string) => `${baseUrlV3}/collection/${id}?language=en-US`,

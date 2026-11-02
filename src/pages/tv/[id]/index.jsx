@@ -1,6 +1,9 @@
+import { QueryClient, dehydrate } from "@tanstack/react-query";
+import { getServerSession } from "next-auth";
 import { Fragment } from "react";
 
-import { getTechnicalDetails } from "apiRoutes/media";
+import { authOptions } from "api/auth/[...nextauth]";
+import { fetchMediaAccountStates, mediaAccountStatesQueryKey } from "apiRoutes/user";
 import TVDetails from "components/pages/TV/TVDetails";
 import TVTab from "components/pages/TV/TVTab";
 import DominantColor from "components/Shared/DominantColor/DominantColor";
@@ -60,6 +63,7 @@ const TvShow = ({
         <div className='relative z-10'>
           {/* tv tabs */}
           <TVTab
+            mediaId={id}
             cast={cast}
             seasons={seasons}
             reviews={reviews}
@@ -89,14 +93,32 @@ const TvShow = ({
 
 export const getServerSideProps = async (ctx) => {
   try {
-    const [tvResponse, languagesResponse] = await Promise.all([
+    const [tvResponse, languagesResponse, session] = await Promise.all([
       fetch(apiEndpoints.tv.tvDetails(ctx.query.id), fetchOptions()),
-      fetch(apiEndpoints.language, fetchOptions())
+      fetch(apiEndpoints.language, fetchOptions()),
+      getServerSession(ctx.req, ctx.res, authOptions)
     ]);
 
     if (!tvResponse.ok) throw new Error("error fetching details");
 
     const [tvDetails, languages] = await Promise.all([tvResponse.json(), languagesResponse.json()]);
+
+    const queryClient = new QueryClient();
+    const mediaId = tvDetails?.id ?? ctx.query.id;
+    const token = session?.user?.accessToken;
+    const accountId = session?.user?.accountId;
+
+    if (token && accountId && mediaId != null) {
+      try {
+        await queryClient.prefetchQuery({
+          queryKey: mediaAccountStatesQueryKey("tv", mediaId, accountId),
+          queryFn: ({ signal }) =>
+            fetchMediaAccountStates({ mediaType: "tv", mediaId, token, signal })
+        });
+      } catch (prefetchErr) {
+        console.error("prefetch media account states (tv) failed", prefetchErr);
+      }
+    }
 
     const socialIds = tvDetails?.external_ids,
       logo = getMediaLogo(tvDetails?.images?.logos),
@@ -110,8 +132,6 @@ export const getServerSideProps = async (ctx) => {
 
     // check if logo is dark
     const isLogoDark = await isImageDark(logo?.file_path);
-
-    const technicalDetails = await getTechnicalDetails(socialIds?.imdb_id);
 
     return {
       props: {
@@ -130,7 +150,7 @@ export const getServerSideProps = async (ctx) => {
           ).slice(0, 15)
         },
         seasons: tvDetails?.seasons,
-        reviews: tvDetails?.reviews?.results || [],
+        reviews: tvDetails?.reviews || null,
         backdrops: tvDetails?.images?.backdrops || [],
         posters: tvDetails?.images?.posters || [],
         recommendations: tvDetails?.recommendations?.results || [],
@@ -156,10 +176,12 @@ export const getServerSideProps = async (ctx) => {
           socialIds,
           language: language?.english_name || language?.name || "TBA",
           homepage: tvDetails?.homepage,
-          technicalDetails,
+          imdbId: socialIds?.imdb_id,
           productionCompanies: tvDetails?.production_companies,
           keywords: tvDetails?.keywords?.results || []
-        }
+        },
+
+        dehydratedState: dehydrate(queryClient)
       }
     };
   } catch {

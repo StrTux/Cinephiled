@@ -12,7 +12,6 @@ import MediaTemplateGrid from "components/Templates/MediaTemplateGrid";
 import Button from "components/UI/Button";
 import FlexBox from "components/UI/FlexBox";
 import LayoutContainer from "components/UI/LayoutContainer";
-import H2 from "components/UI/Typography/H2";
 import { apiEndpoints } from "data/apiEndpoints";
 import { ROUTES, siteInfo, sortOptions } from "data/global";
 import useInfiniteQuery from "hooks/useInfiniteQuery";
@@ -114,9 +113,8 @@ const Movies = ({ initialMovies, genres, languages, regions }) => {
     router.replace("/movies");
   };
 
-  const { list, resetQueryState } = useInfiniteQuery({
+  const { list, resetQueryState, isLoading } = useInfiniteQuery({
     initialPage: 2,
-    scrollAfterLoad: false,
     getEndpoint: ({ page }) =>
       apiEndpoints.discover.movies({
         pageQuery: page,
@@ -144,14 +142,10 @@ const Movies = ({ initialMovies, genres, languages, regions }) => {
         url={`${siteInfo.url}/${ROUTES.movies}`}
       />
 
-      <LayoutContainer className='relative py-4864'>
+      <LayoutContainer className='relative pt-4864'>
         <DominantColor tint />
 
         <section className='relative z-10'>
-          <H2 tag='h1' className='mb-4864 text-center text-neutral-100'>
-            Discover Movies
-          </H2>
-
           <MobileFilter
             filters={filters}
             onFilterChange={handleFilterChange}
@@ -176,9 +170,14 @@ const Movies = ({ initialMovies, genres, languages, regions }) => {
             </div>
 
             {/* Results */}
-            <div className='w-full'>
+            <div className='w-full pb-4864'>
               {movies?.length > 0 ? (
-                <MediaTemplateGrid media={movies} mediaType='movie' gridConfig={{ xxs: 2, sm: 3, lg: 4, xl: "desktopAutoFillMedia" }} />
+                <MediaTemplateGrid
+                  media={movies}
+                  mediaType='movie'
+                  gridConfig={{ xxs: 2, sm: 3, lg: 4, xl: "desktopAutoFillMedia" }}
+                  isLoadingNewItems={isLoading}
+                />
               ) : (
                 <PlaceholderText height='large'>
                   No movies found with these filters.

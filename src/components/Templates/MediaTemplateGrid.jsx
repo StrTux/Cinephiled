@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 
+import { LoadingSpinner } from "components/Loader/Loader";
 import RatingTag from "components/RatingTag/RatingTag";
 import { Grid, GridCol } from "components/UI/Grid";
 import H6 from "components/UI/Typography/H6";
@@ -28,6 +29,7 @@ const getMediaRoute = (type) => {
 
 const MediaTemplateGrid = ({
   media,
+  isLoadingNewItems = false,
   showRating = true,
   children = null,
   mediaType = "movie",
@@ -39,7 +41,7 @@ const MediaTemplateGrid = ({
   const gridSizeConfig =
     gridConfig ||
     (matches(gridType, "poster")
-      ? { xxs: 2, sm: 3, lg: 4, xl: 5, "2xl": "desktopAutoFillMedia" }
+      ? { xxs: 2, sm: 3, md: 4, lg: 5, "2xl": "desktopAutoFillMedia" }
       : { xxs: 1, xs: 2, lg: "desktopAutoFillMediaBackdrop" });
 
   return (
@@ -53,7 +55,7 @@ const MediaTemplateGrid = ({
                   src={getTMDBImage({ path: matches(gridType, "poster") ? poster_path : backdrop_path, type: gridType, size: imageSize })}
                   alt={title || name}
                   fill
-                  className='rounded-xl object-cover shadow-xl'
+                  className='content-visibility-auto rounded-xl object-cover shadow-xl'
                   placeholder='blur'
                   blurDataURL={blurPlaceholder}
                 />
@@ -76,6 +78,12 @@ const MediaTemplateGrid = ({
           )}
         </GridCol>
       ))}
+
+      {isLoadingNewItems ? (
+        <div className='grid-center aspect-poster w-full'>
+          <LoadingSpinner />
+        </div>
+      ) : null}
     </Grid>
   );
 };

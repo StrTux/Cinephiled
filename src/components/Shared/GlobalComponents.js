@@ -59,10 +59,6 @@ export const reviewStyles = css`
     padding: 0 1em;
     border-left: 0.25em solid ${theme.colors.neutral[100]};
   }
-
-  .content-wrapper {
-    word-break: break-word;
-  }
 `;
 
 const heroBannerAnimation = keyframes`
@@ -94,10 +90,6 @@ export const heroBanner = ({ isHydrated }) => css`
 
   .backdrop-wrapper {
     width: ${cssClamp({ minSize: 225, maxSize: 325 })};
-  }
-
-  .backdrops-row {
-    will-change: transform;
   }
 
   ${isHydrated
@@ -141,6 +133,7 @@ export const productionHeroWrapper = css`
     position: relative;
     width: ${cssClamp({ minSize: 200, maxSize: 250 })};
     aspect-ratio: var(--aspectRatio);
+    max-height: ${cssClamp({ minSize: 250, maxSize: 350 })};
   }
 `;
 
